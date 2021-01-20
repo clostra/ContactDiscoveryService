@@ -7,8 +7,8 @@ export USE_OPT_LIBS
 ## linux sdk
 ##
 
-SGX_SDK_SOURCE_GIT_TAG ?= sgx_2.1.3
-SGX_SDK_SOURCE_GIT_REV ?= sgx_2.1.3-g75dd558bdaff
+SGX_SDK_SOURCE_GIT_TAG ?= sgx_2.12
+SGX_SDK_SOURCE_GIT_REV ?= sgx_2.12-gd3bd1571240b
 export SGX_SDK_SOURCE_DIR := linux-sgx-$(SGX_SDK_SOURCE_GIT_REV)
 export SGX_SDK_SOURCE_INCLUDEDIR := $(SGX_SDK_SOURCE_DIR)/common/inc
 export SGX_SDK_SOURCE_LIBDIR := $(SGX_SDK_SOURCE_DIR)/build/linux
