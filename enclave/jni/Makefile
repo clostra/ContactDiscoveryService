@@ -16,9 +16,11 @@ STATIC_TARGET := lib$(NAME).a
 STATIC_SOURCES := $(srcdir)/sgxsd.c $(srcdir)/sabd_enclave_u.c
 STATIC_OBJECTS := $(STATIC_SOURCES:.c=.o)
 
+SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
+
 SOURCES := $(srcdir)/sgxsd-jni.c
 OBJECTS := $(SOURCES:.c=.o) $(STATIC_TARGET)
-LDFLAGS := $(CFLAGS) -L../$(SGX_LIBDIR) -l$(SGX_URTS_LIB)
+LDFLAGS := $(CFLAGS) -L../$(SGX_LIBDIR) -l$(SGX_URTS_LIB) -L$(SGX_LIBRARY_PATH) -lsgx_epid
 
 .PHONY: all static
 all: $(TARGET)
