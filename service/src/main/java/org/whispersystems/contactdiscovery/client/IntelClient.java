@@ -19,11 +19,6 @@ package org.whispersystems.contactdiscovery.client;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.glassfish.jersey.SslConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,18 +32,10 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.KeyPair;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -60,29 +47,31 @@ import java.time.format.DateTimeFormatter;
  * Client interface for communication with IAS
  *
  * @author Moxie Marlinspike
+ * @author Konglomerat
  */
 public class IntelClient {
-
-  private static final String SYNTHESIZED_KEY_STORE_PASSWORD = "insecure";
 
   private final Logger logger = LoggerFactory.getLogger(IntelClient.class);
 
   private final Client  client;
+  private final String  iasSecretKey;
   private final String  host;
   private final boolean acceptGroupOutOfDate;
 
-  public IntelClient(String host, String clientCertificate, String clientKey, boolean acceptGroupOutOfDate)
+  public IntelClient(String host, String iasSecretKey, boolean acceptGroupOutOfDate)
       throws CertificateException, KeyStoreException, IOException
   {
-    this.client               = initializeClient(clientCertificate, clientKey);
+    this.client               = initializeClient();
+    this.iasSecretKey         = iasSecretKey;
     this.host                 = host;
     this.acceptGroupOutOfDate = acceptGroupOutOfDate;
   }
 
   public byte[] getSignatureRevocationList(long gid) {
     String encodedRevocationList = client.target(host)
-                                         .path(String.format("/attestation/sgx/v3/sigrl/%08x", gid))
+                                         .path(String.format("/attestation/v3/sigrl/%08x", gid))
                                          .request()
+                                         .header("Ocp-Apim-Subscription-Key", this.iasSecretKey)
                                          .get(String.class);
 
     if (encodedRevocationList != null && encodedRevocationList.trim().length() != 0) {
@@ -95,8 +84,9 @@ public class IntelClient {
   public QuoteSignatureResponse getQuoteSignature(byte[] quote) throws QuoteVerificationException, StaleRevocationListException {
     try {
       Response response = client.target(host)
-                                .path("/attestation/sgx/v3/report")
+                                .path("/attestation/v3/report")
                                 .request(MediaType.APPLICATION_JSON)
+                                .header("Ocp-Apim-Subscription-Key", this.iasSecretKey)
                                 .post(Entity.json(new QuoteSignatureRequest(quote)));
 
       String responseBodyString = response.readEntity(String.class);
@@ -176,14 +166,10 @@ public class IntelClient {
     return platformInfoBlob;
   }
 
-  private static Client initializeClient(String clientCertificate, String clientKey)
+  private static Client initializeClient()
       throws CertificateException, KeyStoreException, IOException
   {
-    byte[] synthesizedKeyStore = initializeKeyStore(clientCertificate, clientKey);
     SSLContext sslContext = SslConfigurator.newInstance()
-                                           .keyStoreBytes(synthesizedKeyStore)
-                                           .keyStorePassword(SYNTHESIZED_KEY_STORE_PASSWORD)
-                                           .keyPassword(SYNTHESIZED_KEY_STORE_PASSWORD)
                                            .securityProtocol("TLSv1.2")
                                            .createSSLContext();
 
@@ -192,37 +178,5 @@ public class IntelClient {
                         .build();
   }
 
-  private static byte[] initializeKeyStore(String pemCertificate, String pemKey)
-      throws IOException, KeyStoreException, CertificateException
-  {
-    PEMParser             certificateReader = new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemCertificate.getBytes())));
-    X509CertificateHolder certificateHolder = (X509CertificateHolder) certificateReader.readObject();
-    if (certificateHolder == null) {
-      throw new CertificateException("couldn't read pem certificate");
-    }
-
-    X509Certificate       certificate       = new JcaX509CertificateConverter().getCertificate(certificateHolder);
-    Certificate[]         certificateChain  = {certificate};
-
-    PEMParser  keyReader  = new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemKey.getBytes())));
-    PEMKeyPair pemKeyPair = (PEMKeyPair) keyReader.readObject();
-    if (pemKeyPair == null) {
-      throw new KeyStoreException("couldn't read pem private key");
-    }
-
-    KeyPair               keyPair  = new JcaPEMKeyConverter().getKeyPair(pemKeyPair);
-    KeyStore              keyStore = KeyStore.getInstance("pkcs12");
-    ByteArrayOutputStream baos     = new ByteArrayOutputStream();
-    try {
-      keyStore.load(null);
-      keyStore.setEntry("intel",
-                        new KeyStore.PrivateKeyEntry(keyPair.getPrivate(), certificateChain),
-                        new KeyStore.PasswordProtection(SYNTHESIZED_KEY_STORE_PASSWORD.toCharArray()));
-      keyStore.store(baos, SYNTHESIZED_KEY_STORE_PASSWORD.toCharArray());
-      return baos.toByteArray();
-    } catch (NoSuchAlgorithmException e) {
-      throw new AssertionError(e);
-    }
-  }
 
 }

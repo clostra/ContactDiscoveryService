@@ -30,6 +30,7 @@ import java.util.List;
  * Configuration for all enclaves
  *
  * @author Moxie Marlinspike
+ * @author Konglomerat
  */
 public class EnclaveConfiguration {
 
@@ -39,11 +40,7 @@ public class EnclaveConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String certificate;
-
-  @JsonProperty
-  @NotEmpty
-  private String key;
+  private String iasSecretKey;
 
   @JsonProperty
   @NotEmpty
@@ -73,8 +70,8 @@ public class EnclaveConfiguration {
     return targetBatchSize;
   }
 
-  public String getCertificate() {
-    return certificate;
+  public String getIasSecretKey() {
+    return iasSecretKey;
   }
 
   public List<EnclaveInstanceConfiguration> getInstances() {
@@ -85,15 +82,11 @@ public class EnclaveConfiguration {
     return iasHost;
   }
 
-  public String getKey() {
-    return key;
-  }
-
   public boolean getAcceptGroupOutOfDate() {
     return acceptGroupOutOfDate;
   }
 
-  public void setCertificate(String certificate) {
-    this.certificate = certificate;
+  public void setIasSecretKey(String iasSecretKey) {
+    this.iasSecretKey = iasSecretKey;
   }
 }

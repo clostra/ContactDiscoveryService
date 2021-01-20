@@ -107,8 +107,7 @@ public class ContactDiscoveryService extends Application<ContactDiscoveryConfigu
     SignalServiceAuthenticator signalServiceAuthenticator = new SignalServiceAuthenticator(configuration.getSignalServiceConfiguration().getServerAuthenticationToken());
 
     IntelClient intelClient = new IntelClient(configuration.getEnclaveConfiguration().getIasHost(),
-                                              configuration.getEnclaveConfiguration().getCertificate(),
-                                              configuration.getEnclaveConfiguration().getKey(),
+                                              configuration.getEnclaveConfiguration().getIasSecretKey(),
                                               configuration.getEnclaveConfiguration().getAcceptGroupOutOfDate());
 
     RedisClientFactory       cacheClientFactory       = new RedisClientFactory(configuration.getRedisConfiguration());
