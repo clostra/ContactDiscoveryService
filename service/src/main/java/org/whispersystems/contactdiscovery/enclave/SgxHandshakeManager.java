@@ -81,11 +81,11 @@ public class SgxHandshakeManager implements Managed, Runnable {
   public RemoteAttestationResponse getHandshake(String enclaveId, byte[] clientPublic)
       throws SgxException, NoSuchEnclaveException, SignedQuoteUnavailableException
   {
-    logger.debug("START");
+    System.out.println("START");
 
     SgxEnclave enclave = sgxEnclaveManager.getEnclave(enclaveId);
 
-    logger.debug("ENCLAVE: " + enclave);
+    System.out.println("ENCLAVE: " + enclave);
 
     SgxSignedQuote                signedQuote;
     SgxRequestNegotiationResponse response;
@@ -98,7 +98,7 @@ public class SgxHandshakeManager implements Managed, Runnable {
       response = enclave.negotiateRequest(clientPublic);
     }
 
-    logger.debug("RESPONSE: " + response);
+    System.out.println("RESPONSE: " + response);
 
     return new RemoteAttestationResponse(response.getServerEphemeralPublicKey(),
                                          response.getServerStaticPublicKey(),
