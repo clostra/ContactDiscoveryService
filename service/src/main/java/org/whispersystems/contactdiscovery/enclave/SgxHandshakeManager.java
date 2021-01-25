@@ -98,7 +98,11 @@ public class SgxHandshakeManager implements Managed, Runnable {
       response = enclave.negotiateRequest(clientPublic);
     }
 
-    System.out.println("RESPONSE: " + response);
+    System.out.println("RESPONSE: " + "response.getServerEphemeralPublicKey()" + response.getServerEphemeralPublicKey() +
+                                      "response.getServerStaticPublicKey()" + response.getServerStaticPublicKey() +
+                                      "response.getPendingRequestIdIv()" + response.getPendingRequestIdIv() +
+                                      "response.getPendingRequestIdCiphertext()" + response.getPendingRequestIdCiphertext() +
+                                      "response.getPendingRequestIdTag())" +response.getPendingRequestIdTag());
 
     return new RemoteAttestationResponse(response.getServerEphemeralPublicKey(),
                                          response.getServerStaticPublicKey(),
