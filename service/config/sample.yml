@@ -1,40 +1,43 @@
 enclave:
-  spid:        # Service Provider ID
-  certificate: # Service Provider Certificate
-  key:         # Service Provider Key
-  iasHost:     # IAS Host to talk to (testing or production)
-  acceptGroupOutOfDate: # Whether to serve IAS responses with GROUP_OUT_OF_DATE instead of OK [true|false]
+  spid:         A6FE97EJA8FAU19JH8C83B3JAVA102CE # ID from Software Guard Extensions Attestation Service account
+  iasSecretKey: f7d6fn13svsd23mqwfq9wfq721ve32fd # Key from Software Guard Extensions Attestation Service account
+  iasHost:      https://api.trustedservices.intel.com/sgx/dev
+  acceptGroupOutOfDate: true
   instances:
-   - mrenclave: # mrenclave value 1
-     debug:     # Whether this is a debug or production enclave [true|false]
-   - mrenclave: # mrenclave value 2
-     debug:     # Whether this is a debug or production enclave [true|false]
+    - mrenclave: 92c5382f1b904ebfa61460af52ba88ccc84ca384d9c66895a5025f9e20c334f9 # Content of the enclave/*.mrenclave file.
+      debug:     false
 
 signal:
-  userToken:    # head -c 16 /dev/urandom | hexdump -ve '1/1 "%.2x"'
-  serverToken:  # head -c 16 /dev/urandom | hexdump -ve '1/1 "%.2x"'
+  userToken:    54e12969e0d12e737078c453f5abe3f0 # Generated with command `head -c 16 /dev/urandom | hexdump -ve '1/1 "%.2x"'`
+  serverToken:  a140221e0da70023a7261ead94964fc8 # backupService/userAuthenticationTokenSharedSecret from the Signal Server config
 
 redis:
-  masterName:   # Redis Sentinel master name
+  masterName: mymaster # Name of the Redis Sentinel master node. Look at the /etc/redis/sentinel.conf
   sentinelUrls:
-   - # Redis Sentinel host:port 1
-   - # Redis Sentinel host:port 2
-
+    - 127.0.0.1:6379 # Address where Redis Sentinel is listening
+    -
 directory:
   initialSize: 10000000
   minLoadFactor: 0.75
   maxLoadFactor: 0.85
+  sqs:
+    accessKey: AKIA4LSDV0870AVADVSWIM
+    accessSecret: rTHNM39lhwvwelhvw982vdslvjhsdvT0RAL
+    queueUrl: https://sqs.us-east-1.amazonaws.com/92837109842/test-signal.fifo
+    queueRegion: us-east-1
 
 limits:
   contactQueries:
-    bucketSize:        # Leaky bucket size
-    leakRatePerMinute: # Leaky bucket rate per minute
+    bucketSize:        50000 # Leaky bucket size
+    leakRatePerMinute: 50000 # Leaky bucket rate per minute
   remoteAttestations:
-    bucketSize:        # Leaky bucket size
-    leakRatePerMinute: # Leaky bucket rate per minute
+    bucketSize:        50000 # Leaky bucket size
+    leakRatePerMinute: 50000 # Leaky bucket rate per minute
 
-metrics:
-  reporters:
-    - type:     json # wavefront metrics reporter
-      hostname:      # wavefront endpoint hostname
-      token:         # wavefront endpoint token
+server: # Server configuration
+  applicationConnectors:
+    - type: http
+      port: 8080 # Server will listen this port
+  adminConnectors:
+    - type: http
+      port: 8081 # Admin interface port
